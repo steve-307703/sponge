@@ -1,0 +1,10 @@
+[workspace]
+members = [
+	"keccak",
+	"sponge",
+	"xoodoo"
+]
+resolver = "2"
+
+[profile.test]
+opt-level = 3

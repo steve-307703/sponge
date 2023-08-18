@@ -1,0 +1,13 @@
+comment_width = 100
+force_multiline_blocks = true
+group_imports = "StdExternalCrate"
+hard_tabs = true
+imports_granularity = "Crate"
+max_width = 100
+newline_style = "Unix"
+trailing_comma = "Never"
+unstable_features = true
+use_field_init_shorthand = true
+use_small_heuristics = "Max"
+version = "Two"
+wrap_comments = true
