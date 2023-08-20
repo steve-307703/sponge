@@ -1,4 +1,4 @@
-use std::mem;
+use core::mem;
 
 use sponge::{state::Lsbu64, suffix, Permutation, State};
 

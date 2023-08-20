@@ -1,11 +1,10 @@
-use std::{marker::PhantomData, mem};
+use core::{marker::PhantomData, mem};
 
 use crate::{Permutation, State};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Cyclist<S, P, M> {
 	state: S,
-	index: usize,
 	phase: Phase,
 	permutation: PhantomData<P>,
 	mode: PhantomData<M>
@@ -71,16 +70,6 @@ macro_rules! crypt {
 	};
 }
 
-impl<S, P, M> Cyclist<S, P, M>
-where
-	S: State,
-	P: Permutation<S::Inner>
-{
-	const fn from_state_impl(state: S) -> Self {
-		Self { state, index: 0, phase: Phase::Up, permutation: PhantomData, mode: PhantomData }
-	}
-}
-
 impl<S, P, const RATE: usize> Cyclist<S, P, Hash<RATE>>
 where
 	S: State,
@@ -94,8 +83,7 @@ where
 	#[track_caller]
 	pub fn from_state(state: S) -> Self {
 		assert!(RATE != 0 && RATE <= S::LEN - 2);
-
-		Self::from_state_impl(state)
+		Self { state, phase: Phase::Up, permutation: PhantomData, mode: PhantomData }
 	}
 
 	pub fn absorb(&mut self, buf: &[u8]) {
@@ -149,7 +137,6 @@ where
 {
 	fn zeroize(&mut self) {
 		self.state.zeroize();
-		self.index.zeroize();
 		self.phase.zeroize();
 	}
 }
@@ -186,7 +173,12 @@ where
 	}
 
 	#[track_caller]
-	pub fn from_state_with_key_id_counter(state: S, key: &[u8], id: &[u8], counter: &[u8]) -> Self {
+	pub fn from_state_with_key_id_counter(
+		mut state: S,
+		key: &[u8],
+		id: &[u8],
+		counter: &[u8]
+	) -> Self {
 		assert!(S::LEN <= 256);
 		assert!(RATE_ABSORB != 0 && RATE_ABSORB <= S::LEN - 2);
 		assert!(RATE_SQUEEZE != 0 && RATE_SQUEEZE <= S::LEN - 2);
@@ -195,14 +187,14 @@ where
 		assert!(id.len() < 256);
 		assert!(key.len() + id.len() <= RATE_ABSORB - 1);
 
-		let mut cyclist = Self::from_state_impl(state);
+		state.xor_in_u8_slice(0, key);
+		state.xor_in_u8_slice(key.len(), id);
+		state.xor_in_u8(key.len() + id.len(), id.len() as u8);
+		state.xor_in_u8(key.len() + id.len() + 1, 0x01);
+		state.xor_in_u8(S::LEN - 1, 0x02);
 
-		let mut vec = Vec::with_capacity(key.len() + id.len() + 1);
-		vec.extend_from_slice(key);
-		vec.extend_from_slice(id);
-		vec.push(id.len() as u8);
-
-		cyclist.absorb_any::<RATE_ABSORB>(&vec, 0x02);
+		let mut cyclist =
+			Self { state, phase: Phase::Down, permutation: PhantomData, mode: PhantomData };
 
 		if !counter.is_empty() {
 			cyclist.absorb_any::<1>(counter, 0x00);
@@ -215,9 +207,9 @@ where
 		self.absorb_any::<RATE_ABSORB>(buf, 0x03);
 	}
 
+	#[track_caller]
 	pub fn squeeze_into(&mut self, buf: &mut [u8]) {
 		assert!(!buf.is_empty());
-
 		self.squeeze_any::<RATE_SQUEEZE>(buf, 0x40)
 	}
 
@@ -231,12 +223,13 @@ where
 
 	crypt!(decrypt, xor_out_u8_slice, xor_in_u8_slice);
 
+	#[track_caller]
 	pub fn squeeze_key_into(&mut self, buf: &mut [u8]) {
 		assert!(!buf.is_empty());
-
 		self.squeeze_any::<RATE_SQUEEZE>(buf, 0x20);
 	}
 
+	#[track_caller]
 	pub fn squeeze_key<const LEN: usize>(&mut self) -> [u8; LEN] {
 		let mut buf = [0; LEN];
 		self.squeeze_key_into(&mut buf);

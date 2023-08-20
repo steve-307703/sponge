@@ -1,4 +1,4 @@
-use std::{
+use core::{
 	fmt::{self, Debug, Formatter},
 	mem::size_of,
 	ops::Deref
@@ -56,7 +56,7 @@ right_encode!(u8, u16, u32, u64, u128, usize);
 
 #[cfg(test)]
 mod tests {
-	use std::convert::TryFrom;
+	use core::convert::TryFrom;
 
 	use super::RightEncoded;
 

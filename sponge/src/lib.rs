@@ -1,3 +1,4 @@
+#![no_std]
 #![warn(
 	clippy::nursery,
 	deprecated_in_future,
@@ -18,6 +19,9 @@
 	unused_qualifications,
 	unused_results
 )]
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 pub mod cyclist;
 pub mod sponge;

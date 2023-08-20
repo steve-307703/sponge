@@ -1,3 +1,4 @@
+#![no_std]
 #![warn(
 	deprecated_in_future,
 	future_incompatible,

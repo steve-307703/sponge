@@ -1,4 +1,4 @@
-use std::{fmt::Debug, mem::size_of, slice};
+use core::{fmt::Debug, mem::size_of, slice};
 
 use crate::Permutation;
 
@@ -158,8 +158,8 @@ impl<S> Debug for SecretState<S>
 where
 	S: State + zeroize::DefaultIsZeroes
 {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "SecretState<{}>", std::any::type_name::<S>())
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		f.write_str("SecretState<..>(..)")
 	}
 }
 
@@ -168,8 +168,9 @@ impl<S> From<S> for SecretState<S>
 where
 	S: State + zeroize::DefaultIsZeroes
 {
-	fn from(s: S) -> Self {
-		Self(s.into())
+	#[inline]
+	fn from(state: S) -> Self {
+		Self(zeroize::Zeroizing::new(state))
 	}
 }
 
@@ -183,7 +184,7 @@ where
 
 	#[inline]
 	fn from_inner(inner: Self::Inner) -> Self {
-		Self(S::from_inner(inner).into())
+		Self(zeroize::Zeroizing::new(S::from_inner(inner)))
 	}
 
 	#[inline]
@@ -231,7 +232,8 @@ where
 	}
 }
 
-impl<S> State for Box<S>
+#[cfg(feature = "alloc")]
+impl<S> State for alloc::boxed::Box<S>
 where
 	S: State
 {
