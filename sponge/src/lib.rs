@@ -36,3 +36,72 @@ pub use crate::{cyclist::Cyclist, sponge::Sponge, state::State, suffix::*};
 pub trait Permutation<S> {
 	fn permute(state: &mut S);
 }
+
+pub trait Absorb {
+	fn absorb(&mut self, buf: &[u8]);
+
+	#[inline]
+	fn absorb_u8(&mut self, b: u8) {
+		self.absorb(core::slice::from_ref(&b));
+	}
+}
+
+pub trait IntoSqueezer {
+	type Squeezer: Squeezer;
+
+	fn into_squeezer(self) -> Self::Squeezer;
+
+	#[inline]
+	fn squeeze_into(self, buf: &mut [u8])
+	where
+		Self: Sized
+	{
+		self.into_squeezer().squeeze_into(buf)
+	}
+
+	#[inline]
+	fn squeeze<const LEN: usize>(self) -> [u8; LEN]
+	where
+		Self: Sized
+	{
+		self.into_squeezer().squeeze()
+	}
+}
+
+pub trait Squeeze {
+	fn squeeze_into(self, buf: &mut [u8]);
+
+	#[inline]
+	fn squeeze<const LEN: usize>(self) -> [u8; LEN]
+	where
+		Self: Sized
+	{
+		let mut buf = [0; LEN];
+		self.squeeze_into(&mut buf);
+		buf
+	}
+}
+
+impl<T> Squeeze for T
+where
+	T: IntoSqueezer
+{
+	fn squeeze_into(self, buf: &mut [u8]) {
+		self.into_squeezer().squeeze_into(buf)
+	}
+
+	fn squeeze<const LEN: usize>(self) -> [u8; LEN] {
+		self.into_squeezer().squeeze()
+	}
+}
+
+pub trait Squeezer {
+	fn squeeze_into(&mut self, buf: &mut [u8]);
+
+	#[inline]
+	fn squeeze<const LEN: usize>(&mut self) -> [u8; LEN] {
+		let mut buf = [0; LEN];
+		self.squeeze_into(&mut buf);
+		buf
+	}
+}

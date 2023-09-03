@@ -1,6 +1,6 @@
 use core::mem;
 
-use sponge::{state::Lsbu64, suffix, Permutation, State};
+use sponge::{state::Lsbu64, suffix, Absorb, IntoSqueezer, Permutation, State};
 
 use crate::{
 	encode::RightEncoded,
@@ -165,6 +165,28 @@ where
 			chunk: 0,
 			length: 0
 		}
+	}
+}
+
+impl<S> Absorb for KangarooTwelve<S>
+where
+	S: State,
+	Keccak1600<12>: Permutation<S::Inner>
+{
+	fn absorb(&mut self, buf: &[u8]) {
+		self.absorb(buf);
+	}
+}
+
+impl<S> IntoSqueezer for KangarooTwelve<S>
+where
+	S: State,
+	Keccak1600<12>: Permutation<S::Inner>
+{
+	type Squeezer = TurboShake128Squeezer<S>;
+
+	fn into_squeezer(self) -> Self::Squeezer {
+		self.into_squeezer()
 	}
 }
 

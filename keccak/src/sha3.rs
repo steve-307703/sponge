@@ -1,4 +1,7 @@
-use sponge::{sponge::Squeezer, state::Lsbu64, suffix, Permutation, Sponge, State, Suffix};
+use sponge::{
+	sponge::Squeezer, state::Lsbu64, suffix, Absorb, IntoSqueezer, Permutation, Sponge, Squeeze,
+	State, Suffix
+};
 
 use crate::keccakp::Keccak1600;
 
@@ -60,6 +63,26 @@ macro_rules! sha3 {
 		{
 			fn default() -> Self {
 				Self(Sponge::default())
+			}
+		}
+
+		impl<S> Absorb for $sponge<S>
+		where
+			S: State,
+			Keccak1600<24>: Permutation<S::Inner>
+		{
+			fn absorb(&mut self, buf: &[u8]) {
+				self.absorb(buf);
+			}
+		}
+
+		impl<S> Squeeze for $sponge<S>
+		where
+			S: State,
+			Keccak1600<24>: Permutation<S::Inner>
+		{
+			fn squeeze_into(self, buf: &mut [u8]) {
+				self.squeeze_into(buf);
 			}
 		}
 
@@ -168,6 +191,16 @@ macro_rules! shake_impl {
 			}
 		}
 
+		impl<S> Absorb for $sponge<S>
+		where
+			S: State,
+			Keccak1600<$rounds>: Permutation<S::Inner>
+		{
+			fn absorb(&mut self, buf: &[u8]) {
+				self.absorb(buf);
+			}
+		}
+
 		#[cfg(feature = "digest")]
 		impl<S> digest::Update for $sponge<S>
 		where
@@ -221,6 +254,18 @@ macro_rules! shake {
 
 			pub fn squeeze<const LEN: usize>(self) -> [u8; LEN] {
 				self.into_squeezer().squeeze()
+			}
+		}
+
+		impl<S> IntoSqueezer for $sponge<S>
+		where
+			S: State,
+			Keccak1600<24>: Permutation<S::Inner>
+		{
+			type Squeezer = $squeezer<S>;
+
+			fn into_squeezer(self) -> Self::Squeezer {
+				self.into_squeezer()
 			}
 		}
 

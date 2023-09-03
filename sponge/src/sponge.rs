@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{Permutation, State, Suffix};
+use crate::{Absorb, Permutation, State, Suffix};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Sponge<S, P, const CAPACITY: usize, const FULL_STATE: bool>(Inner<S, P, CAPACITY>);
@@ -98,6 +98,21 @@ where
 	}
 }
 
+impl<S, P, const CAPACITY: usize, const FULL_STATE: bool> Absorb
+	for Sponge<S, P, CAPACITY, FULL_STATE>
+where
+	S: State,
+	P: Permutation<S::Inner>
+{
+	fn absorb(&mut self, buf: &[u8]) {
+		self.absorb(buf);
+	}
+
+	fn absorb_u8(&mut self, b: u8) {
+		self.absorb_u8(b);
+	}
+}
+
 #[cfg(feature = "digest")]
 impl<S, P, const CAPACITY: usize, const FULL_STATE: bool> digest::Update
 	for Sponge<S, P, CAPACITY, FULL_STATE>
@@ -167,6 +182,16 @@ where
 		if self.0.index == Self::RATE {
 			self.0.permute();
 		}
+	}
+}
+
+impl<S, P, const CAPACITY: usize> crate::Squeezer for Squeezer<S, P, CAPACITY>
+where
+	S: State,
+	P: Permutation<S::Inner>
+{
+	fn squeeze_into(&mut self, buf: &mut [u8]) {
+		self.squeeze_into(buf);
 	}
 }
 
