@@ -168,6 +168,28 @@ where
 	}
 }
 
+#[cfg(feature = "digest")]
+impl<S> digest::Update for KangarooTwelve<S>
+where
+	S: State,
+	Keccak1600<12>: Permutation<S::Inner>
+{
+	fn update(&mut self, buf: &[u8]) {
+		self.absorb(buf);
+	}
+}
+
+#[cfg(feature = "digest")]
+impl<S> digest::Reset for KangarooTwelve<S>
+where
+	S: State,
+	Keccak1600<12>: Permutation<S::Inner>
+{
+	fn reset(&mut self) {
+		*self = Self::default();
+	}
+}
+
 #[cfg(feature = "zeroize")]
 impl<S> zeroize::Zeroize for KangarooTwelve<S>
 where

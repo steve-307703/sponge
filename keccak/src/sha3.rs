@@ -63,6 +63,48 @@ macro_rules! sha3 {
 			}
 		}
 
+		#[cfg(feature = "digest")]
+		impl<S> digest::Update for $sponge<S>
+		where
+			S: State,
+			Keccak1600<24>: Permutation<S::Inner>
+		{
+			fn update(&mut self, buf: &[u8]) {
+				self.absorb(buf);
+			}
+		}
+
+		#[cfg(feature = "digest")]
+		impl<S> digest::OutputSizeUser for $sponge<S>
+		where
+			S: State,
+			Keccak1600<24>: Permutation<S::Inner>
+		{
+			type OutputSize = digest::consts::$typenum;
+		}
+
+		#[cfg(feature = "digest")]
+		impl<S> digest::FixedOutput for $sponge<S>
+		where
+			S: State,
+			Keccak1600<24>: Permutation<S::Inner>
+		{
+			fn finalize_into(self, out: &mut digest::Output<Self>) {
+				self.squeeze_into(out);
+			}
+		}
+
+		#[cfg(feature = "digest")]
+		impl<S> digest::Reset for $sponge<S>
+		where
+			S: State,
+			Keccak1600<24>: Permutation<S::Inner>
+		{
+			fn reset(&mut self) {
+				*self = Self::default();
+			}
+		}
+
 		#[cfg(feature = "zeroize")]
 		impl<S> zeroize::Zeroize for $sponge<S>
 		where
@@ -126,6 +168,28 @@ macro_rules! shake_impl {
 			}
 		}
 
+		#[cfg(feature = "digest")]
+		impl<S> digest::Update for $sponge<S>
+		where
+			S: State,
+			Keccak1600<$rounds>: Permutation<S::Inner>
+		{
+			fn update(&mut self, buf: &[u8]) {
+				self.absorb(buf);
+			}
+		}
+
+		#[cfg(feature = "digest")]
+		impl<S> digest::Reset for $sponge<S>
+		where
+			S: State,
+			Keccak1600<$rounds>: Permutation<S::Inner>
+		{
+			fn reset(&mut self) {
+				*self = Self::default();
+			}
+		}
+
 		#[cfg(feature = "zeroize")]
 		impl<S> zeroize::Zeroize for $sponge<S>
 		where
@@ -157,6 +221,19 @@ macro_rules! shake {
 
 			pub fn squeeze<const LEN: usize>(self) -> [u8; LEN] {
 				self.into_squeezer().squeeze()
+			}
+		}
+
+		#[cfg(feature = "digest")]
+		impl<S> digest::ExtendableOutput for $sponge<S>
+		where
+			S: State,
+			Keccak1600<24>: Permutation<S::Inner>
+		{
+			type Reader = $squeezer<S>;
+
+			fn finalize_xof(self) -> Self::Reader {
+				self.into_squeezer()
 			}
 		}
 	};

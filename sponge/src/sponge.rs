@@ -90,12 +90,34 @@ where
 impl<S, P, const CAPACITY: usize, const FULL_STATE: bool> Default
 	for Sponge<S, P, CAPACITY, FULL_STATE>
 where
-	S: State,
-	P: Permutation<S::Inner>
+	S: State
 {
 	#[track_caller]
 	fn default() -> Self {
 		Self(Inner::default())
+	}
+}
+
+#[cfg(feature = "digest")]
+impl<S, P, const CAPACITY: usize, const FULL_STATE: bool> digest::Update
+	for Sponge<S, P, CAPACITY, FULL_STATE>
+where
+	S: State,
+	P: Permutation<S::Inner>
+{
+	fn update(&mut self, data: &[u8]) {
+		self.absorb(data);
+	}
+}
+
+#[cfg(feature = "digest")]
+impl<S, P, const CAPACITY: usize, const FULL_STATE: bool> digest::Reset
+	for Sponge<S, P, CAPACITY, FULL_STATE>
+where
+	S: State
+{
+	fn reset(&mut self) {
+		*self = Self::default()
 	}
 }
 
@@ -145,6 +167,17 @@ where
 		if self.0.index == Self::RATE {
 			self.0.permute();
 		}
+	}
+}
+
+#[cfg(feature = "digest")]
+impl<S, P, const CAPACITY: usize> digest::XofReader for Squeezer<S, P, CAPACITY>
+where
+	S: State,
+	P: Permutation<S::Inner>
+{
+	fn read(&mut self, buf: &mut [u8]) {
+		self.squeeze_into(buf);
 	}
 }
 
