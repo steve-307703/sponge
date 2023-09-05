@@ -66,6 +66,14 @@ pub trait IntoSqueezer {
 	{
 		self.into_squeezer().squeeze()
 	}
+
+	#[cfg(feature = "alloc")]
+	#[inline]
+	fn squeeze_boxed(self, len: usize) -> Box<[u8]> {
+		let mut buf = vec![0; len].into_boxed_slice();
+		self.squeeze_into(&mut buf);
+		buf
+	}
 }
 
 pub trait Squeeze {
@@ -77,6 +85,14 @@ pub trait Squeeze {
 		Self: Sized
 	{
 		let mut buf = [0; LEN];
+		self.squeeze_into(&mut buf);
+		buf
+	}
+
+	#[cfg(feature = "alloc")]
+	#[inline]
+	fn squeeze_boxed(self, len: usize) -> Box<[u8]> {
+		let mut buf = vec![0; len].into_boxed_slice();
 		self.squeeze_into(&mut buf);
 		buf
 	}
@@ -93,6 +109,11 @@ where
 	fn squeeze<const LEN: usize>(self) -> [u8; LEN] {
 		self.into_squeezer().squeeze()
 	}
+
+	#[cfg(feature = "alloc")]
+	fn squeeze_boxed(self, len: usize) -> Box<[u8]> {
+		self.into_squeezer().squeeze_boxed(len)
+	}
 }
 
 pub trait Squeezer {
@@ -101,6 +122,14 @@ pub trait Squeezer {
 	#[inline]
 	fn squeeze<const LEN: usize>(&mut self) -> [u8; LEN] {
 		let mut buf = [0; LEN];
+		self.squeeze_into(&mut buf);
+		buf
+	}
+
+	#[cfg(feature = "alloc")]
+	#[inline]
+	fn squeeze_boxed(&mut self, len: usize) -> Box<[u8]> {
+		let mut buf = vec![0; len].into_boxed_slice();
 		self.squeeze_into(&mut buf);
 		buf
 	}

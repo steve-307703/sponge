@@ -31,16 +31,8 @@ macro_rules! sha3 {
 			S: State,
 			Keccak1600<24>: Permutation<S::Inner>
 		{
-			pub fn absorb_u8(&mut self, b: u8) {
-				self.0.absorb_u8(b);
-			}
-
 			pub fn absorb(&mut self, buf: &[u8]) {
 				self.0.absorb(buf);
-			}
-
-			pub fn absorb_zeroes(&mut self, zeroes: usize) {
-				self.0.absorb_zeroes(zeroes);
 			}
 
 			#[track_caller]
@@ -73,6 +65,10 @@ macro_rules! sha3 {
 		{
 			fn absorb(&mut self, buf: &[u8]) {
 				self.absorb(buf);
+			}
+
+			fn absorb_u8(&mut self, b: u8) {
+				self.0.absorb_u8(b);
 			}
 		}
 
@@ -168,16 +164,8 @@ macro_rules! shake_impl {
 			S: State,
 			Keccak1600<$rounds>: Permutation<S::Inner>
 		{
-			pub fn absorb_u8(&mut self, b: u8) {
-				self.0.absorb_u8(b);
-			}
-
 			pub fn absorb(&mut self, buf: &[u8]) {
 				self.0.absorb(buf);
-			}
-
-			pub fn absorb_zeroes(&mut self, zeroes: usize) {
-				self.0.absorb_zeroes(zeroes);
 			}
 		}
 
@@ -198,6 +186,10 @@ macro_rules! shake_impl {
 		{
 			fn absorb(&mut self, buf: &[u8]) {
 				self.absorb(buf);
+			}
+
+			fn absorb_u8(&mut self, b: u8) {
+				self.0.absorb_u8(b);
 			}
 		}
 
