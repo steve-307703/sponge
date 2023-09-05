@@ -69,11 +69,11 @@ pub trait IntoSqueezer {
 
 	#[cfg(feature = "alloc")]
 	#[inline]
-	fn squeeze_boxed(self, len: usize) -> Box<[u8]>
+	fn squeeze_boxed(self, len: usize) -> alloc::boxed::Box<[u8]>
 	where
 		Self: Sized
 	{
-		let mut buf = vec![0; len].into_boxed_slice();
+		let mut buf = alloc::vec![0; len].into_boxed_slice();
 		self.squeeze_into(&mut buf);
 		buf
 	}
@@ -94,11 +94,11 @@ pub trait Squeeze {
 
 	#[cfg(feature = "alloc")]
 	#[inline]
-	fn squeeze_boxed(self, len: usize) -> Box<[u8]>
+	fn squeeze_boxed(self, len: usize) -> alloc::boxed::Box<[u8]>
 	where
 		Self: Sized
 	{
-		let mut buf = vec![0; len].into_boxed_slice();
+		let mut buf = alloc::vec![0; len].into_boxed_slice();
 		self.squeeze_into(&mut buf);
 		buf
 	}
@@ -117,7 +117,7 @@ where
 	}
 
 	#[cfg(feature = "alloc")]
-	fn squeeze_boxed(self, len: usize) -> Box<[u8]> {
+	fn squeeze_boxed(self, len: usize) -> alloc::boxed::Box<[u8]> {
 		self.into_squeezer().squeeze_boxed(len)
 	}
 }
@@ -134,8 +134,8 @@ pub trait Squeezer {
 
 	#[cfg(feature = "alloc")]
 	#[inline]
-	fn squeeze_boxed(&mut self, len: usize) -> Box<[u8]> {
-		let mut buf = vec![0; len].into_boxed_slice();
+	fn squeeze_boxed(&mut self, len: usize) -> alloc::boxed::Box<[u8]> {
+		let mut buf = alloc::vec![0; len].into_boxed_slice();
 		self.squeeze_into(&mut buf);
 		buf
 	}
