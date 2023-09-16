@@ -64,6 +64,10 @@ where
 		self.0.permute();
 	}
 
+	pub fn into_state(self) -> S {
+		self.0.state
+	}
+
 	pub fn into_squeezer(mut self, suffix: Suffix) -> Squeezer<S, P, CAPACITY> {
 		self.pad_multi_rate(suffix);
 		self.0.index = Self::SQUEEZE_RATE;
