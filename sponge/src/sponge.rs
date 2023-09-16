@@ -161,6 +161,10 @@ where
 {
 	pub const RATE: usize = S::LEN - CAPACITY;
 
+	pub fn from_state(state: S) -> Self {
+		Self(Inner::from_state(state))
+	}
+
 	pub fn squeeze_into(&mut self, mut buf: &mut [u8]) {
 		while !buf.is_empty() {
 			self.check_permute();
