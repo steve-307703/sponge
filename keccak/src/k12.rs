@@ -5,15 +5,15 @@ use sponge::{state::Lsbu64, suffix, Absorb, IntoSqueezer, Permutation, State};
 use crate::{
 	encode::RightEncoded,
 	keccakp::Keccak1600,
-	sha3::{TurboShake128Squeezer, TurboShakeShake128}
+	sha3::{TurboShake128, TurboShake128Squeezer}
 };
 
 const CHUNK_LEN: usize = 8 << 10;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct KangarooTwelve<S> {
-	root: TurboShakeShake128<S>,
-	leaf: TurboShakeShake128<S>,
+	root: TurboShake128<S>,
+	leaf: TurboShake128<S>,
 	chunk: u64,
 	length: usize
 }
@@ -159,12 +159,7 @@ where
 	Keccak1600<12>: Permutation<S::Inner>
 {
 	fn default() -> Self {
-		Self {
-			root: TurboShakeShake128::default(),
-			leaf: TurboShakeShake128::default(),
-			chunk: 0,
-			length: 0
-		}
+		Self { root: TurboShake128::default(), leaf: TurboShake128::default(), chunk: 0, length: 0 }
 	}
 }
 

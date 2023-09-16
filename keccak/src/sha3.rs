@@ -308,5 +308,5 @@ sha3!(Sha3_512, { 512 * 2 / 8 }, 512 / 8, U64);
 shake!(Shake128, Shake128Squeezer, { 128 * 2 / 8 });
 shake!(Shake256, Shake256Squeezer, { 256 * 2 / 8 });
 
-turbo_shake!(TurboShakeShake128, TurboShake128Squeezer, { 128 * 2 / 8 });
-turbo_shake!(TurboShakeShake256, TurboShake256Squeezer, { 256 * 2 / 8 });
+turbo_shake!(TurboShake128, TurboShake128Squeezer, { 128 * 2 / 8 });
+turbo_shake!(TurboShake256, TurboShake256Squeezer, { 256 * 2 / 8 });
