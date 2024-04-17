@@ -147,90 +147,96 @@ state!(Lsbu32, u32);
 state!(Lsbu64, u64);
 state!(Lsbu128, u128);
 
-#[cfg(feature = "zeroize")]
-#[derive(Clone, Default)]
-pub struct SecretState<S>(zeroize::Zeroizing<S>)
-where
-	S: State + zeroize::DefaultIsZeroes;
+macro_rules! secret_state {
+	($state:ty; $from:path; $($tt:tt)+) => {
+		#[derive(Clone, Default)]
+		pub struct SecretState<S>($state)
+		where
+			S: $($tt)+;
 
-#[cfg(feature = "zeroize")]
-impl<S> Debug for SecretState<S>
-where
-	S: State + zeroize::DefaultIsZeroes
-{
-	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-		f.write_str("SecretState<..>(..)")
-	}
+		impl<S> Debug for SecretState<S>
+		where
+			S: $($tt)+
+		{
+			fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+				f.write_str("SecretState(..)")
+			}
+		}
+
+		impl<S> From<S> for SecretState<S>
+		where
+			S: $($tt)+
+		{
+			#[inline]
+			fn from(state: S) -> Self {
+				Self($from(state))
+			}
+		}
+
+		impl<S> State for SecretState<S>
+		where
+			S: $($tt)+
+		{
+			const LEN: usize = S::LEN;
+			type Inner = S::Inner;
+
+			#[inline]
+			fn from_inner(inner: Self::Inner) -> Self {
+				Self($from(S::from_inner(inner)))
+			}
+
+			#[inline]
+			#[track_caller]
+			fn get_u8_slice(&self, index: usize, buf: &mut [u8]) {
+				self.0.get_u8_slice(index, buf);
+			}
+
+			#[inline]
+			#[track_caller]
+			fn xor_out_u8_slice(&self, index: usize, buf: &mut [u8]) {
+				self.0.xor_out_u8_slice(index, buf);
+			}
+
+			#[inline]
+			#[track_caller]
+			fn set_u8_slice(&mut self, index: usize, buf: &[u8]) {
+				self.0.set_u8_slice(index, buf);
+			}
+
+			#[inline]
+			#[track_caller]
+			fn set_u8_repeated(&mut self, index: usize, b: u8, len: usize) {
+				self.0.set_u8_repeated(index, b, len);
+			}
+
+			#[inline]
+			#[track_caller]
+			fn xor_in_u8_slice(&mut self, index: usize, buf: &[u8]) {
+				self.0.xor_in_u8_slice(index, buf);
+			}
+
+			#[inline]
+			#[track_caller]
+			fn xor_in_u8(&mut self, index: usize, b: u8) {
+				self.0.xor_in_u8(index, b);
+			}
+
+			#[inline]
+			fn permute<P>(&mut self)
+			where
+				P: Permutation<Self::Inner>
+			{
+				self.0.permute::<P>();
+			}
+		}
+	};
 }
 
 #[cfg(feature = "zeroize")]
-impl<S> From<S> for SecretState<S>
-where
-	S: State + zeroize::DefaultIsZeroes
-{
-	#[inline]
-	fn from(state: S) -> Self {
-		Self(zeroize::Zeroizing::new(state))
-	}
-}
+secret_state!(zeroize::Zeroizing<S>; zeroize::Zeroizing::new; State + zeroize::DefaultIsZeroes);
 
-#[cfg(feature = "zeroize")]
-impl<S> State for SecretState<S>
-where
-	S: State + zeroize::DefaultIsZeroes
-{
-	const LEN: usize = S::LEN;
-	type Inner = S::Inner;
-
-	#[inline]
-	fn from_inner(inner: Self::Inner) -> Self {
-		Self(zeroize::Zeroizing::new(S::from_inner(inner)))
-	}
-
-	#[inline]
-	#[track_caller]
-	fn get_u8_slice(&self, index: usize, buf: &mut [u8]) {
-		self.0.get_u8_slice(index, buf);
-	}
-
-	#[inline]
-	#[track_caller]
-	fn xor_out_u8_slice(&self, index: usize, buf: &mut [u8]) {
-		self.0.xor_out_u8_slice(index, buf);
-	}
-
-	#[inline]
-	#[track_caller]
-	fn set_u8_slice(&mut self, index: usize, buf: &[u8]) {
-		self.0.set_u8_slice(index, buf);
-	}
-
-	#[inline]
-	#[track_caller]
-	fn set_u8_repeated(&mut self, index: usize, b: u8, len: usize) {
-		self.0.set_u8_repeated(index, b, len);
-	}
-
-	#[inline]
-	#[track_caller]
-	fn xor_in_u8_slice(&mut self, index: usize, buf: &[u8]) {
-		self.0.xor_in_u8_slice(index, buf);
-	}
-
-	#[inline]
-	#[track_caller]
-	fn xor_in_u8(&mut self, index: usize, b: u8) {
-		self.0.xor_in_u8(index, b);
-	}
-
-	#[inline]
-	fn permute<P>(&mut self)
-	where
-		P: Permutation<Self::Inner>
-	{
-		self.0.permute::<P>();
-	}
-}
+#[cfg(not(feature = "zeroize"))]
+secret_state!(S; core::convert::identity; State);
 
 #[cfg(feature = "alloc")]
 impl<S> State for alloc::boxed::Box<S>

@@ -29,9 +29,12 @@ pub mod state;
 
 mod suffix;
 
-#[cfg(feature = "zeroize")]
-pub use crate::state::SecretState;
-pub use crate::{cyclist::Cyclist, sponge::Sponge, state::State, suffix::*};
+pub use crate::{
+	cyclist::Cyclist,
+	sponge::Sponge,
+	state::{SecretState, State},
+	suffix::*
+};
 
 pub trait Permutation<S> {
 	fn permute(state: &mut S);
