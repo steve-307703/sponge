@@ -92,7 +92,6 @@ where
 
 	pub fn squeeze_into(&mut self, buf: &mut [u8]) {
 		assert!(!buf.is_empty());
-
 		self.squeeze_any::<RATE>(buf, 0x00)
 	}
 
@@ -114,7 +113,7 @@ where
 
 	fn up(&mut self, buf: &mut [u8], _color: u8) {
 		self.state.permute::<P>();
-		self.state.xor_out_u8_slice(0, buf);
+		self.state.get_u8_slice(0, buf);
 
 		self.phase = Phase::Up;
 	}
@@ -255,7 +254,7 @@ where
 	fn up(&mut self, buf: &mut [u8], color: u8) {
 		self.state.xor_in_u8(S::LEN - 1, color);
 		self.state.permute::<P>();
-		self.state.xor_out_u8_slice(0, buf);
+		self.state.get_u8_slice(0, buf);
 
 		self.phase = Phase::Up;
 	}
